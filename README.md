@@ -1,14 +1,51 @@
-# baishui-zmt-v19 · 新媒体运营工作台 v19 复现 Skill
+# baishui-zmt · 新媒体运营工作台 复现 Skill
 
-WorkBuddy 用户级技能：从零复现「新媒体运营工作台」稳定版 v19 的已验证工程工作流。
+> 一个 WorkBuddy 用户级技能：把「新媒体运营工作台」从原型到稳定版的完整工程工作流，压缩成一条可直接复用的技能。
 
-## 包含
-- `SKILL.md`：去踩坑后的最直接路径（原型 → Phase1 MVP → Phase2 同步后端 → Phase3 扩展 4 模块 → PWA 缓存/部署收敛 → v15–v19 验收打磨）、v1→v19 版本里程碑关键决策、核心数据模型、中性深灰视觉规范、iOS Safari 日期框修复、自验证与部署流程、v19 完整功能清单、从零复现操作清单。
-- `references/v19-source/`：字节级归档（= 线上 v19 验证源码），已 `node --check` 通过、版本一致（`sw.js` CACHE = `app.js` APP_VERSION = `ops-v19`）。**最快复现方式：直接复制该目录即可等价于 v19。**
+## 这是什么
 
-## 使用方法
-1. 将整个 `baishui-zmt-v19` 目录放入 WorkBuddy 用户级技能目录：`~/.workbuddy/skills/`
-2. 新建对话说「按 baishui-zmt-v19 复现运营台」即可唤起该技能。
+「新媒体运营工作台」是一个面向多账号新媒体运营者的**本地优先 PWA**，覆盖备忘录 / 待办 / 提醒 / 多账号面板，以及发布日历、选题素材库、数据看板、周月报四件扩展。它历经 v1→v19 打磨，采用中性深灰视觉、iOS Safari 兼容修正，并以 CloudStudio 固定公网地址部署。
+
+本技能把这一路踩坑验证过的最优路径完整沉淀下来：无论你要**重建、复现**，还是仅仅**回顾其中的关键技术决策**，唤起它即可拿到逐步骤指引。
+
+## 你能用它做什么
+
+- 从零复现 v19 全部功能（最快方式 = 直接复制 `references/v19-source/`，等价于线上 v19）
+- 按 v1→v19 顺序开发 / 二次开发
+- 回顾关键决策：中性深灰视觉规范、iOS Safari 日期框 `-webkit-appearance:none` 修复、CloudStudio 部署定案、无浏览器自验证 workflow 等
+
+## 包含什么
+
+- **`SKILL.md`**：已验证工程工作流（原型 → Phase1 MVP → Phase2 同步后端 → Phase3 扩展 4 模块 → PWA 缓存/部署收敛 → v15–v19 验收打磨）、v1→v19 版本里程碑关键决策、核心数据模型、视觉规范、iOS 修复、自验证与部署流程、v19 完整功能清单、从零复现操作清单。
+- **`references/v19-source/`**：字节级归档（= 线上 v19 验证源码），已 `node --check` 通过、版本一致（`sw.js` CACHE = `app.js` APP_VERSION = `ops-v19`）。
+
+> 💡 想要现成可运行代码？直接复制 `references/v19-source/` 整个目录，就已等价于一份可运行的 v19。
+
+## 装进你自己的 Agent
+
+把技能放进 WorkBuddy 的**用户级技能目录** `~/.workbuddy/skills/` 即可，四种取法任选其一：
+
+- **方式 A（推荐，能跟着更新）**：`git clone https://github.com/BaiShui-xss/baishui-zmt-v19.git ~/.workbuddy/skills/baishui-zmt-v19`
+- **方式 B（离线 / 单文件）**：下载 `baishui-zmt-v19.zip`，解压到 `~/.workbuddy/skills/baishui-zmt-v19/`
+- **方式 C（直接拷）**：把整个 `baishui-zmt-v19` 文件夹丢进 `~/.workbuddy/skills/`
+- **方式 D（让 Agent 帮你装）**：直接把本仓库地址 `https://github.com/BaiShui-xss/baishui-zmt-v19` 复制到 WorkBuddy 聊天框，说「帮我把这个 skill 安装到用户级技能目录」，Agent 会自动把它 `git clone` 到 `~/.workbuddy/skills/baishui-zmt-v19` 并加载（需 Agent 有网络与 shell 权限，WorkBuddy 默认具备）。
+
+放好后**重启（或刷新）WorkBuddy**，新建对话说「按 baishui-zmt-v19 复现运营台」即可唤起。
+
+## 验收说明
+
+v19 为当前稳定版本，已通过《验收交接清单》逐条核对，满足现有运营工作台的全部需求，包括：桌面端 86 项功能回归全部 PASS、iOS Safari 真机验证日期框横向溢出已解决、固定公网地址可达性断言全 200 等。后续新模块或个性化改造，可由用户基于自身需求自行迭代优化。
+
+## 功能状态补充
+
+### 提醒功能
+- **完成度**：已实现本地完整的提醒能力（新建 / 编辑 / 删除、触发时间设置，以及与待办、发布日历联动的「计划发布」）；并在 v19 修复了 iOS Safari 下日期框横向溢出的专属问题（`-webkit-appearance:none` + `overflow-x:hidden`）。
+- **已知限制**：提醒数据默认存于本机浏览器 localStorage；在**未部署公网同步后端**的情况下，提醒不会在手机与电脑之间自动同步。此外，iOS 上点按日期框不再显示原生日历图标（已退化为可收缩的普通输入框，点按仍会弹出原生选择器）。
+
+### 真两端同步（跨设备同步）
+- **现在就能用的**：数据已经支持 **导入 / 导出（JSON）**。换设备时，先在旧设备上「导出」把运营数据存成一份文件，再到新设备上「导入」进来，数据就搬过去了；平时备份也靠它。
+- **想要"自动实时同步"还差一步**：如果你要的是手机和电脑**自动共用同一份数据、不用手动搬**，目前还差一个公网后端——也就是仓库里的 `server.js`（Node + SQLite）。当前 CloudStudio 那个地址只是个静态页面、跑不了 Node，所以默认不会自动同步；本机那套后端也只在同一个 WiFi 局域网里能用。真要实时同步，得你自己把 `server.js` 部署到一个公网能访问的地址，然后在设置里的「云端同步」填上它——前端 `apiPing` / `pullState` / 15s 轮询 / 三套同步逻辑都已经写好，接上就能用。
 
 ## 许可
+
 MIT
