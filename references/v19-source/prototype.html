@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>新媒体运营工作台 · 原型 v2</title>
+<style>
+  :root{
+    --bg:#000000;
+    --bg-grad:radial-gradient(1100px 560px at 82% -12%, rgba(128,128,128,.07), transparent 60%),
+              radial-gradient(820px 460px at -8% 112%, rgba(128,128,128,.05), transparent 55%);
+    --panel:#0c0c0c;
+    --panel-2:#141414;
+    --panel-3:#1d1d1d;
+    --border:#333333;
+    --border-soft:#222222;
+    --text:#f2f2f2;
+    --muted:#9a9a9a;
+    --faint:#6b6b6b;
+    --accent:#38bdf8;
+    --accent-2:#2dd4bf;
+    --success:#34d399;
+    --warn:#fbbf24;
+    --danger:#f87171;
+    --purple:#a78bfa;
+    --radius:14px;
+    --radius-sm:10px;
+    --shadow:0 14px 40px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    background:var(--bg);
+    background-image:var(--bg-grad);
+    background-attachment:fixed;
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+    font-size:14px;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:linear-gradient(rgba(128,128,128,.03) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(128,128,128,.03) 1px,transparent 1px);
+    background-size:42px 42px;
+  }
+  .app{position:relative;z-index:1;display:flex;min-height:100vh}
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width:240px;flex:0 0 240px;
+    background:linear-gradient(180deg,rgba(22,22,22,.92),rgba(0,0,0,.92));
+    border-right:1px solid var(--border-soft);
+    padding:18px 12px;display:flex;flex-direction:column;gap:4px;
+    position:sticky;top:0;height:100vh;transition:width .2s ease,flex-basis .2s ease;overflow:hidden;
+  }
+  .sidebar.collapsed{width:72px;flex-basis:72px}
+  .brand{display:flex;align-items:center;gap:10px;padding:4px 8px 14px;position:relative}
+  .brand .logo{
+    width:34px;height:34px;border-radius:10px;flex:0 0 34px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    display:grid;place-items:center;color:#04121b;font-weight:800;font-size:16px;
+    box-shadow:0 0 18px rgba(56,189,248,.4);
+  }
+  .brand .name{font-weight:700;letter-spacing:.5px}
+  .brand .sub{font-size:11px;color:var(--faint);letter-spacing:1px}
+  .collapse-btn{
+    margin-left:auto;width:26px;height:26px;border-radius:8px;border:1px solid var(--border);
+    background:var(--panel-2);color:var(--muted);cursor:pointer;font-size:14px;display:grid;place-items:center;transition:.15s;
+  }
+  .collapse-btn:hover{border-color:var(--accent);color:var(--text)}
+
+  .nav-label{font-size:11px;color:var(--faint);padding:14px 12px 6px;letter-spacing:1px;white-space:nowrap}
+  /* account panel */
+  .acct-panel{display:flex;flex-direction:column;gap:3px}
+  .acct-row{
+    display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;
+    color:var(--muted);transition:.15s;border:1px solid transparent;white-space:nowrap;
+  }
+  .acct-row:hover{background:var(--panel-2);color:var(--text)}
+  .acct-row.active{background:linear-gradient(90deg,rgba(56,189,248,.18),rgba(56,189,248,.02));color:var(--text);border-color:rgba(56,189,248,.35)}
+  .acct-row .ava.sm{width:28px;height:28px;border-radius:8px;flex:0 0 28px;display:grid;place-items:center;font-size:15px;background:var(--panel-3);border:1px solid var(--border)}
+  .acct-row .lbl{font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis}
+  .acct-row .sdot{width:7px;height:7px;border-radius:50%;margin-left:auto;flex:0 0 7px}
+  .sdot.active{background:var(--success);box-shadow:0 0 7px var(--success)}
+  .sdot.incub{background:var(--warn);box-shadow:0 0 7px var(--warn)}
+  .sdot.sleep{background:var(--faint)}
+
+  .nav-item{
+    display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;
+    color:var(--muted);cursor:pointer;transition:.15s;border:1px solid transparent;font-weight:500;white-space:nowrap;
+  }
+  .nav-item svg{width:18px;height:18px;flex:0 0 18px}
+  .nav-item:hover{background:var(--panel-2);color:var(--text)}
+  .nav-item.active{background:linear-gradient(90deg,rgba(56,189,248,.16),rgba(56,189,248,.02));color:var(--text);border-color:rgba(56,189,248,.3)}
+  .nav-item.active svg{color:var(--accent)}
+  .nav-item .soon{margin-left:auto;font-size:10px;color:var(--faint);border:1px solid var(--border);padding:1px 6px;border-radius:20px}
+  .nav-spacer{flex:1}
+  .sync-pill{
+    margin-top:auto;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);
+    background:var(--panel-2);border:1px solid var(--border-soft);border-radius:10px;padding:9px 11px;white-space:nowrap;
+  }
+  .sync-pill .dot{width:8px;height:8px;border-radius:50%;background:var(--warn);box-shadow:0 0 8px var(--warn);flex:0 0 8px}
+
+  /* collapsed sidebar */
+  .sidebar.collapsed .brand-txt,
+  .sidebar.collapsed .nav-label,
+  .sidebar.collapsed .lbl,
+  .sidebar.collapsed .soon,
+  .sidebar.collapsed .sync-pill span:not(.dot){display:none}
+  .sidebar.collapsed .brand{justify-content:center;padding:4px 0 14px}
+  .sidebar.collapsed .collapse-btn{position:absolute;top:6px;right:6px;margin:0;width:22px;height:22px;font-size:12px}
+  .sidebar.collapsed .nav-item,
+  .sidebar.collapsed .acct-row{justify-content:center;padding:10px 0;gap:0}
+  .sidebar.collapsed .acct-row .sdot{display:none}
+  .sidebar.collapsed .sync-pill{justify-content:center;padding:9px 0}
+  .sidebar.collapsed .sync-pill .dot{margin:0}
+
+  /* ---------- Main ---------- */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{
+    display:flex;align-items:center;gap:14px;padding:16px 26px;border-bottom:1px solid var(--border-soft);
+    background:rgba(0,0,0,.55);backdrop-filter:blur(8px);position:sticky;top:0;z-index:5;
+  }
+  .topbar h1{font-size:18px;font-weight:700;letter-spacing:.3px}
+  .topbar .crumb{color:var(--faint);font-size:12px;margin-top:2px}
+  .topbar .right{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .scope-label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);background:var(--panel-2);border:1px solid var(--border);padding:7px 13px;border-radius:20px;white-space:nowrap}
+  .scope-label .em{font-size:15px}
+  .btn{
+    display:inline-flex;align-items:center;gap:7px;border:none;cursor:pointer;font-weight:600;
+    padding:9px 15px;border-radius:10px;font-size:13px;transition:.15s;white-space:nowrap;
+  }
+  .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#04121b;box-shadow:0 6px 18px rgba(56,189,248,.3)}
+  .btn-primary:hover{filter:brightness(1.08)}
+  .chips{display:flex;gap:7px;flex-wrap:wrap}
+  .chip{font-size:12px;padding:6px 12px;border-radius:20px;cursor:pointer;border:1px solid var(--border);color:var(--muted);background:var(--panel-2);transition:.15s;white-space:nowrap}
+  .chip:hover{border-color:var(--accent);color:var(--text)}
+  .chip.active{background:rgba(56,189,248,.15);border-color:var(--accent);color:var(--text)}
+
+  .content{padding:22px 26px 60px;flex:1}
+  .scope-bar{display:none}
+  .mobile-only{display:none}
+  .view{display:none;animation:fade .25s ease}
+  .view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .section-head{display:flex;align-items:center;gap:10px;margin:4px 0 18px}
+  .section-head h2{font-size:15px;font-weight:700}
+  .section-head .count{font-size:12px;color:var(--faint)}
+  .section-head .spacer{margin-left:auto}
+
+  /* dashboard */
+  .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+  .stat{background:linear-gradient(160deg,var(--panel-2),var(--panel));border:1px solid var(--border-soft);border-radius:var(--radius);padding:16px 18px;position:relative;overflow:hidden}
+  .stat .k{font-size:12px;color:var(--muted)}
+  .stat .v{font-size:26px;font-weight:800;margin-top:6px;letter-spacing:.5px}
+  .stat .v small{font-size:13px;color:var(--faint);font-weight:600}
+  .stat.accent .v{color:var(--accent)}
+  .stat.warn .v{color:var(--warn)}
+  .stat.ok .v{color:var(--success)}
+  .grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+  .acard{background:linear-gradient(160deg,var(--panel-2),var(--panel));border:1px solid var(--border-soft);border-radius:var(--radius);padding:18px;transition:.15s}
+  .acard:hover{border-color:rgba(56,189,248,.4);transform:translateY(-2px)}
+  .acard .head{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .acard .ava{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:22px;background:var(--panel-3);border:1px solid var(--border)}
+  .acard .meta .nm{font-weight:700;font-size:15px}
+  .acard .meta .pf{font-size:11px;color:var(--muted)}
+  .pill{font-size:10px;padding:2px 9px;border-radius:20px;font-weight:600}
+  .pill.active{background:rgba(52,211,153,.15);color:var(--success);border:1px solid rgba(52,211,153,.3)}
+  .pill.incub{background:rgba(251,191,36,.13);color:var(--warn);border:1px solid rgba(251,191,36,.3)}
+  .pill.sleep{background:rgba(147,161,181,.12);color:var(--muted);border:1px solid var(--border)}
+  .acard .bar{height:8px;border-radius:6px;background:var(--panel-3);overflow:hidden;margin:6px 0 4px}
+  .acard .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:6px}
+  .acard .barrow{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+  .acard .mini{display:flex;gap:14px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-soft)}
+  .acard .mini div{font-size:12px;color:var(--muted)}
+  .acard .mini b{display:block;font-size:17px;color:var(--text);font-weight:700;margin-top:2px}
+  .acard .mini .hot{color:var(--warn)}
+
+  /* lists */
+  .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+  .toolbar .spacer{margin-left:auto}
+  .list{display:flex;flex-direction:column;gap:12px}
+  .card{background:linear-gradient(160deg,var(--panel-2),var(--panel));border:1px solid var(--border-soft);border-radius:var(--radius);padding:15px 17px;transition:.15s}
+  .card:hover{border-color:var(--border)}
+  .memo .top{display:flex;gap:10px;align-items:flex-start}
+  .memo .body{color:var(--text);font-size:14px;white-space:pre-wrap;line-height:1.6}
+  .memo .foot{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .tag{font-size:11px;padding:3px 9px;border-radius:6px;background:var(--panel-3);color:var(--accent-2);border:1px solid rgba(45,212,191,.2)}
+  .pin{color:var(--warn);font-size:13px}
+  .at{font-size:11px;color:var(--faint);margin-left:auto}
+  .todo{display:flex;align-items:flex-start;gap:13px}
+  .check{width:20px;height:20px;border-radius:6px;border:2px solid var(--border);flex:0 0 20px;cursor:pointer;display:grid;place-items:center;margin-top:2px;transition:.15s;color:transparent}
+  .check:hover{border-color:var(--accent)}
+  .todo.done .check{background:var(--success);border-color:var(--success);color:#04121b}
+  .todo.done .tt{text-decoration:line-through;color:var(--faint)}
+  .todo .tt{font-weight:600;flex:1}
+  .todo .det{color:var(--muted);font-size:13px;margin-top:3px}
+  .pri{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+  .pri.high{background:rgba(248,113,113,.15);color:var(--danger)}
+  .pri.mid{background:rgba(251,191,36,.15);color:var(--warn)}
+  .pri.low{background:rgba(147,161,181,.15);color:var(--muted)}
+  .due{font-size:11px;color:var(--muted)}
+  .due.over{color:var(--danger)}
+  .due.soon{color:var(--warn)}
+  .acctag{font-size:11px;padding:2px 9px;border-radius:20px;background:var(--panel-3);border:1px solid var(--border);color:var(--text)}
+  .reminder{display:flex;gap:14px;align-items:flex-start}
+  .rtime{font-weight:700;font-size:13px;color:var(--accent);min-width:78px}
+  .rtype{font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px}
+  .rtype.pub{background:rgba(56,189,248,.15);color:var(--accent)}
+  .rtype.rev{background:rgba(167,139,250,.15);color:var(--purple)}
+  .rtype.cus{background:rgba(45,212,191,.13);color:var(--accent-2)}
+  .rep{font-size:11px;color:var(--faint);margin-left:8px}
+  .empty{padding:50px 20px;text-align:center;color:var(--faint);border:1px dashed var(--border);border-radius:var(--radius)}
+
+  /* modal */
+  .mask{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(3px);z-index:20;display:none;align-items:center;justify-content:center;padding:20px}
+  .mask.show{display:flex}
+  .modal{width:min(480px,100%);background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+  .modal .mh{display:flex;align-items:center;padding:18px 20px;border-bottom:1px solid var(--border-soft)}
+  .modal .mh h3{font-size:15px;font-weight:700}
+  .modal .mh .x{margin-left:auto;cursor:pointer;color:var(--muted);font-size:20px;line-height:1}
+  .modal .mb{padding:18px 20px;display:flex;flex-direction:column;gap:14px}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+  .field input,.field textarea,.field select{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:9px;color:var(--text);padding:10px 12px;font-size:13px;font-family:inherit;outline:none;transition:.15s}
+  .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
+  .field textarea{resize:vertical;min-height:84px}
+  .field input[type=checkbox]{width:auto;margin-right:6px;vertical-align:middle}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .modal .mf{padding:14px 20px 20px;display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--border-soft)}
+
+  /* mobile */
+  .botnav{display:none}
+  @media(max-width:860px){
+    .app{flex-direction:column}
+    .sidebar{display:none}
+    .topbar{padding:14px 16px}
+    .content{padding:16px 16px 90px}
+    .stat-row{grid-template-columns:repeat(2,1fr)}
+    .grid-cards{grid-template-columns:1fr}
+    .scope-bar.mobile-only{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px}
+    .scope-bar .chip{flex:0 0 auto}
+    .row2{grid-template-columns:1fr}
+    .botnav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:15;background:rgba(0,0,0,.95);backdrop-filter:blur(10px);border-top:1px solid var(--border-soft);justify-content:space-around;padding:8px 4px}
+    .botnav .bi{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:10px;cursor:pointer;padding:4px 10px;border-radius:10px}
+    .botnav .bi svg{width:20px;height:20px}
+    .botnav .bi.active{color:var(--accent)}
+  }
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:6px}
+  ::-webkit-scrollbar-track{background:transparent}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo">运</div>
+      <div class="brand-txt">
+        <div class="name">运营工作台</div>
+        <div class="sub">MULTI-ACCOUNT OPS</div>
+      </div>
+      <button class="collapse-btn" id="collapseBtn" title="收起侧栏">«</button>
+    </div>
+
+    <div class="nav-label">账号 · 视图切换</div>
+    <div class="acct-panel" id="acctPanel"></div>
+
+    <div class="nav-label">模块</div>
+    <div class="nav-item active" data-view="dash">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+      <span class="lbl">多账号面板</span>
+    </div>
+    <div class="nav-item" data-view="memo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>
+      <span class="lbl">备忘录</span>
+    </div>
+    <div class="nav-item" data-view="todo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>
+      <span class="lbl">待办事项</span>
+    </div>
+    <div class="nav-item" data-view="reminder">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+      <span class="lbl">提醒事项</span>
+    </div>
+    <div class="nav-label">规划中 · Phase 3</div>
+    <div class="nav-item" data-soon="1">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+      <span class="lbl">发布日历</span><span class="soon">即将</span>
+    </div>
+    <div class="nav-item" data-soon="1">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>
+      <span class="lbl">数据看板</span><span class="soon">即将</span>
+    </div>
+    <div class="nav-item" data-soon="1">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 5-9 5-9-5 9-5z"/><path d="M3 12l9 5 9-5M3 17l9 5 9-5"/></svg>
+      <span class="lbl">选题素材库</span><span class="soon">即将</span>
+    </div>
+    <div class="nav-item" data-soon="1">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg>
+      <span class="lbl">周/月报</span><span class="soon">即将</span>
+    </div>
+    <div class="sync-pill"><span class="dot"></span><span>本地模式 · 同步后端 Phase 2</span></div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 id="pageTitle">多账号面板</h1>
+        <div class="crumb" id="pageCrumb">各账号运营状态与待办进度一览</div>
+      </div>
+      <div class="right">
+        <div class="scope-label" id="scopeLabel"><span class="em">🌐</span><span id="scopeName">全部账号</span></div>
+        <button class="btn btn-primary" id="newBtn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          新建
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="scope-bar mobile-only" id="scopeBar"></div>
+
+      <section class="view active" id="view-dash">
+        <div class="stat-row" id="statRow"></div>
+        <div class="section-head"><h2>账号矩阵</h2><span class="count" id="dashCount"></span></div>
+        <div class="grid-cards" id="acctGrid"></div>
+      </section>
+
+      <section class="view" id="view-memo">
+        <div class="toolbar"><div class="spacer"></div></div>
+        <div class="list" id="memoList"></div>
+      </section>
+
+      <section class="view" id="view-todo">
+        <div class="toolbar">
+          <div class="spacer"></div>
+          <div class="chips" id="todoPri">
+            <span class="chip active" data-pri="all">全部</span>
+            <span class="chip" data-pri="high">仅高优</span>
+            <span class="chip" data-pri="todo">未完成</span>
+            <span class="chip" data-pri="done">已完成</span>
+          </div>
+        </div>
+        <div class="list" id="todoList"></div>
+      </section>
+
+      <section class="view" id="view-reminder">
+        <div class="toolbar">
+          <div class="spacer"></div>
+          <div class="chips" id="remType">
+            <span class="chip active" data-rtype="all">全部</span>
+            <span class="chip" data-rtype="pub">发布</span>
+            <span class="chip" data-rtype="rev">复盘</span>
+            <span class="chip" data-rtype="cus">自定义</span>
+          </div>
+        </div>
+        <div class="list" id="remList"></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<nav class="botnav" id="botnav">
+  <div class="bi active" data-view="dash">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>面板
+  </div>
+  <div class="bi" data-view="memo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>备忘录
+  </div>
+  <div class="bi" data-view="todo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>待办
+  </div>
+  <div class="bi" data-view="reminder">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>提醒
+  </div>
+</nav>
+
+<div class="mask" id="mask">
+  <div class="modal">
+    <div class="mh"><h3 id="mTitle">新建</h3><span class="x" id="mClose">&times;</span></div>
+    <div class="mb" id="mBody"></div>
+    <div class="mf"><button class="btn btn-ghost" id="mCancel">取消</button><button class="btn btn-primary" id="mSave">保存</button></div>
+  </div>
+</div>
+
+<script>
+/* ---------------- State ---------------- */
+const KEY="ops-workbench-v2";
+let state = load();
+window._scope = "all";      // "all" | accountId
+window._f = {};             // filters: pri / type
+function load(){
+  try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.accounts)return s;}catch(e){}
+  return seed();
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(state));}
+function uid(){return Math.random().toString(36).slice(2,9);}
+function seed(){
+  const now=Date.now(), D=86400000;
+  return {
+    accounts:[
+      {id:"a1",platform:"小红书",name:"生活研究所",emoji:"📕",status:"active",goal:"粉丝破 5w"},
+      {id:"a2",platform:"抖音",name:"DailyVlog",emoji:"🎵",status:"active",goal:"月增 1w"},
+      {id:"a3",platform:"公众号",name:"深夜读写",emoji:"💬",status:"incub",goal:"开通流量主"},
+      {id:"a4",platform:"视频号",name:"财经小课堂",emoji:"📺",status:"sleep",goal:"测试选题"},
+    ],
+    memos:[
+      {id:uid(),accountId:"a1",content:"选题：\"一个人住的第 365 天\"——用时间轴叙事，配 9 图日常碎片，结尾抛互动问题。",tags:["选题","情感"],pinned:true,createdAt:now-D},
+      {id:uid(),accountId:"a2",content:"运镜灵感：开头用 0.5x 慢动作特写+字幕卡点，完播率可能更高。",tags:["拍摄"],pinned:false,createdAt:now-2*D},
+      {id:uid(),accountId:"",content:"通用：下个月做一期\"新媒体人工具箱\"合集，顺手吸粉。",tags:["规划"],pinned:false,createdAt:now-3*D},
+    ],
+    todos:[
+      {id:uid(),accountId:"a1",title:"写完《独居好物》笔记正文",detail:"含 6 个单品 + 购买链接",priority:"high",status:"todo",due:now+D},
+      {id:uid(),accountId:"a1",title:"设计封面 3 版 A/B/C",detail:"",priority:"mid",status:"doing",due:now+D*2},
+      {id:uid(),accountId:"a2",title:"剪辑周更 Vlog",detail:"时长 60s 内",priority:"mid",status:"todo",due:now+D*3},
+      {id:uid(),accountId:"a3",title:"起草流量主开通申请文",detail:"",priority:"low",status:"todo",due:now+D*5},
+      {id:uid(),accountId:"a1",title:"回复上周评论区高频问题",detail:"已整理 12 条",priority:"high",status:"done",due:now-D},
+    ],
+    reminders:[
+      {id:uid(),accountId:"a1",type:"pub",title:"发布《独居好物》笔记",trigger:now+D,repeat:"无",done:false},
+      {id:uid(),accountId:"a2",type:"pub",title:"发布周更 Vlog",trigger:now+D*3,repeat:"每周",done:false},
+      {id:uid(),accountId:"a1",type:"rev",title:"小红书本周数据复盘",trigger:now+D*2,repeat:"每周",done:false},
+      {id:uid(),accountId:"a3",type:"cus",title:"确认流量主审核结果",trigger:now+D*5,repeat:"无",done:false},
+    ],
+  };
+}
+const PLAT=["小红书","抖音","公众号","视频号","B站","微博","其他"];
+const STATUSMAP={active:["active","活跃"],incub:["incub","孵化中"],sleep:["sleep","休眠"]};
+
+/* ---------------- Helpers ---------------- */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const acct=id=>state.accounts.find(a=>a.id===id);
+const fmtDate=ts=>{const d=new Date(ts);return `${d.getMonth()+1}/${d.getDate()}`;};
+const fmtFull=ts=>{const d=new Date(ts),p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;};
+const dueClass=ts=>{const t=ts-Date.now();return t<0?"over":t<3*86400000?"soon":"";};
+const esc=s=>(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const scopeFilter=arr=>window._scope==="all"?arr:arr.filter(x=>x.accountId===window._scope);
+
+/* ---------------- Account panel (collapsible) ---------------- */
+function renderAcctPanel(){
+  const rows=[{id:"all",emoji:"🌐",name:"全部账号",status:null}]
+    .concat(state.accounts.map(a=>({id:a.id,emoji:a.emoji,name:a.name,status:a.status})));
+  $("#acctPanel").innerHTML=rows.map(r=>{
+    const active=window._scope===r.id;
+    const sd=r.status?`<span class="sdot ${r.status}"></span>`:"";
+    return `<div class="acct-row ${active?'active':''}" data-scope="${r.id}" title="${esc(r.name)}">
+      <span class="ava sm">${r.emoji}</span><span class="lbl">${esc(r.name)}</span>${sd}</div>`;
+  }).join("");
+}
+function renderScopeUI(){
+  const all={id:"all",emoji:"🌐",name:"全部账号"};
+  const cur=window._scope==="all"?all:state.accounts.find(a=>a.id===window._scope)||all;
+  $("#scopeName").textContent=cur.name;
+  $("#scopeLabel").querySelector(".em").textContent=cur.emoji;
+  // mobile bar
+  const rows=[all].concat(state.accounts.map(a=>({id:a.id,emoji:a.emoji,name:a.name})));
+  $("#scopeBar").innerHTML=rows.map(r=>`<span class="chip ${window._scope===r.id?'active':''}" data-scope="${r.id}">${r.emoji} ${esc(r.name)}</span>`).join("");
+}
+function setScope(id){
+  window._scope=id;
+  renderAcctPanel();renderScopeUI();
+  renderMemo();renderTodo();renderRem();
+  // update view headings to reflect scope
+  if($("#view-memo").classList.contains("active"))renderMemoHead();
+  if($("#view-todo").classList.contains("active"))renderTodoHead();
+  if($("#view-reminder").classList.contains("active"))renderRemHead();
+}
+function renderMemoHead(){
+  const t=window._scope==="all"?"全部账号 · 合并备忘录":acct(window._scope).name+" · 备忘录";
+  $("#pageCrumb").textContent=t;
+}
+function renderTodoHead(){
+  const t=window._scope==="all"?"全部账号 · 合并待办":"待办 · "+acct(window._scope).name;
+  $("#pageCrumb").textContent=t;
+}
+function renderRemHead(){
+  const t=window._scope==="all"?"全部账号 · 合并提醒":"提醒 · "+acct(window._scope).name;
+  $("#pageCrumb").textContent=t;
+}
+
+/* ---------------- Dashboard ---------------- */
+function renderDash(){
+  const ac=state.accounts, todos=state.todos, rem=state.reminders;
+  const done=todos.filter(t=>t.status==="done").length;
+  const overdue=todos.filter(t=>t.status!=="done"&&t.due<Date.now()).length;
+  const todayPub=rem.filter(r=>!r.done&&fmtDate(r.trigger)===fmtDate(Date.now())&&r.type==="pub").length;
+  const pct=todos.length?Math.round(done/todos.length*100):0;
+  $("#statRow").innerHTML=[
+    {k:"管理账号",v:ac.length,cls:""},
+    {k:"待办完成率",v:`${pct}<small>%</small>`,cls:"accent"},
+    {k:"逾期待办",v:overdue,cls:overdue?"warn":"ok"},
+    {k:"今日待发布",v:todayPub,cls:todayPub?"warn":"ok"},
+  ].map(s=>`<div class="stat ${s.cls}"><div class="k">${s.k}</div><div class="v">${s.v}</div></div>`).join("");
+  $("#dashCount").textContent=`共 ${ac.length} 个账号`;
+  $("#acctGrid").innerHTML=ac.map(a=>{
+    const at=state.todos.filter(t=>t.accountId===a.id);
+    const dn=at.filter(t=>t.status==="done").length;
+    const p=at.length?Math.round(dn/at.length*100):0;
+    const near=at.filter(t=>t.status!=="done"&&t.due-Date.now()<7*86400000).length;
+    const todayPub=rem.filter(r=>!r.done&&r.accountId===a.id&&fmtDate(r.trigger)===fmtDate(Date.now())&&r.type==="pub").length;
+    const rm=state.memos.filter(m=>m.accountId===a.id).length;
+    const [sc,sn]=STATUSMAP[a.status];
+    return `<div class="acard">
+      <div class="head"><div class="ava">${a.emoji}</div>
+        <div class="meta" style="flex:1"><div class="nm">${esc(a.name)}</div><div class="pf">${a.platform} · ${esc(a.goal||"")}</div></div>
+        <span class="pill ${sc}">${sn}</span></div>
+      <div class="barrow"><span>待办完成度</span><span>${dn}/${at.length}</span></div>
+      <div class="bar"><i style="width:${p}%"></i></div>
+      <div class="mini">
+        <div>临近截止<b class="${near?'hot':''}">${near}</b></div>
+        <div>今日发布<b class="${todayPub?'hot':''}">${todayPub}</b></div>
+        <div>备忘录<b>${rm}</b></div>
+      </div></div>`;
+  }).join("");
+}
+
+/* ---------------- Memo ---------------- */
+function renderMemo(){
+  const list=scopeFilter(state.memos).sort((a,b)=>(b.pinned-a.pinned)||(b.createdAt-a.createdAt));
+  if(!list.length){renderMemoHead();$("#memoList").innerHTML=`<div class="empty">该范围下还没有备忘录，点右上角「新建」记录灵感吧</div>`;return;}
+  renderMemoHead();
+  $("#memoList").innerHTML=list.map(m=>{
+    const a=m.accountId?acct(m.accountId):null;
+    return `<div class="card memo"><div class="top">${m.pinned?'<span class="pin">📌</span>':''}<div class="body">${esc(m.content)}</div></div>
+      <div class="foot">${m.tags.map(t=>`<span class="tag">#${esc(t)}</span>`).join("")}
+        ${a?`<span class="acctag">${a.emoji} ${esc(a.name)}</span>`:'<span class="acctag">通用</span>'}
+        <span class="at">${fmtDate(m.createdAt)}</span></div></div>`;
+  }).join("");
+}
+
+/* ---------------- Todo ---------------- */
+function renderTodo(){
+  let list=scopeFilter(state.todos);
+  if(window._f.pri==="high")list=list.filter(t=>t.priority==="high");
+  if(window._f.pri==="todo")list=list.filter(t=>t.status!=="done");
+  if(window._f.pri==="done")list=list.filter(t=>t.status==="done");
+  list.sort((a,b)=>(a.status==="done")-(b.status==="done")||(a.due-b.due));
+  if(!list.length){renderTodoHead();$("#todoList").innerHTML=`<div class="empty">该筛选下暂无待办</div>`;return;}
+  renderTodoHead();
+  $("#todoList").innerHTML=list.map(t=>{
+    const a=acct(t.accountId), dc=dueClass(t.due);
+    const pn={high:"高",mid:"中",low:"低"}[t.priority];
+    return `<div class="card todo ${t.status==="done"?"done":""}" data-id="${t.id}">
+      <div class="check" data-act="toggle" data-id="${t.id}">✓</div>
+      <div style="flex:1"><div class="tt">${esc(t.title)}</div>
+        ${t.detail?`<div class="det">${esc(t.detail)}</div>`:""}
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
+          <span class="pri ${t.priority}">${pn}优先级</span>
+          <span class="acctag">${a?a.emoji+" "+esc(a.name):"通用"}</span>
+          ${t.due?`<span class="due ${dc}">📅 ${fmtFull(t.due)}</span>`:""}
+        </div></div></div>`;
+  }).join("");
+}
+
+/* ---------------- Reminder ---------------- */
+function renderRem(){
+  let list=scopeFilter(state.reminders);
+  if(window._f.type&&window._f.type!=="all")list=list.filter(r=>r.type===window._f.type);
+  list.sort((a,b)=>a.trigger-b.trigger);
+  if(!list.length){renderRemHead();$("#remList").innerHTML=`<div class="empty">该范围下暂无提醒</div>`;return;}
+  renderRemHead();
+  const tmap={pub:["pub","发布"],rev:["rev","复盘"],cus:["cus","自定义"]};
+  $("#remList").innerHTML=list.map(r=>{
+    const a=acct(r.accountId),[c,n]=tmap[r.type];
+    return `<div class="card reminder"><div class="rtime">${fmtFull(r.trigger).slice(5,16)}</div>
+      <div style="flex:1"><span class="rtype ${c}">${n}</span>
+        ${r.repeat&&r.repeat!=="无"?`<span class="rep">↻ ${r.repeat}</span>`:""}
+        <div style="font-weight:600;margin-top:6px">${esc(r.title)}</div>
+        <div style="margin-top:4px"><span class="acctag">${a?a.emoji+" "+esc(a.name):"通用"}</span></div></div></div>`;
+  }).join("");
+}
+
+/* ---------------- Nav ---------------- */
+const TITLES={dash:["多账号面板","各账号运营状态与待办进度一览"],memo:["备忘录","灵感 · 选题 · 运营想法"],todo:["待办事项","按账号分类，支持优先级与截止日"],reminder:["提醒事项","发布节点 / 数据复盘 / 自定义"]};
+function go(view){
+  $$(".nav-item[data-view]").forEach(n=>n.classList.toggle("active",n.dataset.view===view));
+  $$(".botnav .bi").forEach(n=>n.classList.toggle("active",n.dataset.view===view));
+  $$(".view").forEach(v=>v.classList.remove("active"));
+  $("#view-"+view).classList.add("active");
+  $("#pageTitle").textContent=TITLES[view][0];
+  $("#pageCrumb").textContent=TITLES[view][1];
+  if(view==="dash")renderDash();
+  if(view==="memo")renderMemo();
+  if(view==="todo")renderTodo();
+  if(view==="reminder")renderRem();
+}
+$$(".nav-item[data-view], .botnav .bi").forEach(n=>n.addEventListener("click",()=>go(n.dataset.view)));
+$$(".nav-item[data-soon]").forEach(n=>n.addEventListener("click",()=>toast("该模块在 Phase 3 规划中")));
+function toast(msg){const t=document.createElement("div");t.textContent=msg;t.style.cssText="position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--panel-3);color:var(--text);border:1px solid var(--border);padding:10px 18px;border-radius:10px;z-index:50;font-size:13px;box-shadow:var(--shadow)";document.body.appendChild(t);setTimeout(()=>t.remove(),1800);}
+
+/* ---------------- Filters & scope clicks ---------------- */
+document.addEventListener("click",e=>{
+  const sc=e.target.closest("[data-scope]");
+  if(sc){setScope(sc.dataset.scope);return;}
+  const p=e.target.closest("[data-pri]");
+  if(p){window._f.pri=p.dataset.pri==="all"?undefined:p.dataset.pri;syncChips("#todoPri","pri",p.dataset.pri);renderTodo();return;}
+  const r=e.target.closest("[data-rtype]");
+  if(r){window._f.type=r.dataset.rtype==="all"?undefined:r.dataset.rtype;syncChips("#remType","rtype",r.dataset.rtype);renderRem();return;}
+  const chk=e.target.closest("[data-act='toggle']");
+  if(chk){const t=state.todos.find(x=>x.id===chk.dataset.id);t.status=t.status==="done"?"todo":"doing";save();renderTodo();renderDash();if(window._scope!=="all")renderDash();return;}
+});
+function syncChips(sel,attr,val){
+  $$(sel+" .chip").forEach(c=>c.classList.toggle("active",(val==="all"?c.dataset[attr]==="all":c.dataset[attr]===val)));
+}
+
+/* ---------------- Collapse sidebar ---------------- */
+$("#collapseBtn").addEventListener("click",()=>{
+  const s=$("#sidebar");s.classList.toggle("collapsed");
+  $("#collapseBtn").textContent=s.classList.contains("collapsed")?"»":"«";
+  $("#collapseBtn").title=s.classList.contains("collapsed")?"展开侧栏":"收起侧栏";
+});
+
+/* ---------------- Modal / CRUD ---------------- */
+let editing=null, editType=null;
+function openModal(type){
+  editType=type;editing=null;
+  $("#mTitle").textContent="新建"+(type==="memo"?"备忘录":type==="todo"?"待办":type==="reminder"?"提醒":"账号");
+  let html="";
+  if(type==="memo"){
+    html=`<div class="field"><label>内容</label><textarea id="f_content" placeholder="记录灵感、选题或想法…"></textarea></div>
+      <div class="row2">
+        <div class="field"><label>归属账号</label><select id="f_acct">${acctOpts(true)}</select></div>
+        <div class="field"><label>标签(逗号分隔)</label><input id="f_tags" placeholder="选题, 拍摄"></div>
+      </div>
+      <div class="field"><label><input type="checkbox" id="f_pin"> 置顶</label></div>`;
+  }else if(type==="todo"){
+    html=`<div class="field"><label>标题</label><input id="f_title" placeholder="要做什么"></div>
+      <div class="field"><label>详情</label><textarea id="f_detail" placeholder="补充说明(可选)"></textarea></div>
+      <div class="row2">
+        <div class="field"><label>归属账号</label><select id="f_acct">${acctOpts()}</select></div>
+        <div class="field"><label>优先级</label><select id="f_pri"><option value="high">高</option><option value="mid" selected>中</option><option value="low">低</option></select></div>
+      </div>
+      <div class="field"><label>截止日期</label><input type="datetime-local" id="f_due"></div>`;
+  }else if(type==="reminder"){
+    html=`<div class="field"><label>标题</label><input id="f_title" placeholder="提醒内容"></div>
+      <div class="row2">
+        <div class="field"><label>类型</label><select id="f_type"><option value="pub">内容发布</option><option value="rev">数据复盘</option><option value="cus">自定义</option></select></div>
+        <div class="field"><label>归属账号</label><select id="f_acct">${acctOpts()}</select></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>触发时间</label><input type="datetime-local" id="f_trig"></div>
+        <div class="field"><label>重复</label><select id="f_rep"><option value="无">无</option><option value="每天">每天</option><option value="每周">每周</option><option value="每月">每月</option></select></div>
+      </div>`;
+  }else if(type==="account"){
+    html=`<div class="field"><label>账号名称</label><input id="f_name" placeholder="如：生活研究所"></div>
+      <div class="row2">
+        <div class="field"><label>平台</label><select id="f_plat">${PLAT.map(p=>`<option>${p}</option>`).join("")}</select></div>
+        <div class="field"><label>图标 Emoji</label><input id="f_emoji" placeholder="📕" value="📱"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>状态</label><select id="f_st"><option value="active">活跃</option><option value="incub">孵化中</option><option value="sleep">休眠</option></select></div>
+        <div class="field"><label>目标</label><input id="f_goal" placeholder="如：粉丝破 5w"></div>
+      </div>`;
+  }
+  $("#mBody").innerHTML=html;
+  if(window._scope!=="all"&&(type==="memo"||type==="todo"||type==="reminder")){
+    const sel=$("#f_acct");if(sel)sel.value=window._scope;
+  }
+  $("#mask").classList.add("show");
+}
+function acctOpts(allowGeneral){
+  let o=allowGeneral?`<option value="">通用</option>`:"";
+  return o+state.accounts.map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join("");
+}
+function closeModal(){$("#mask").classList.remove("show");}
+$("#mClose").onclick=closeModal;$("#mCancel").onclick=closeModal;
+$("#mask").addEventListener("click",e=>{if(e.target===$("#mask"))closeModal();});
+$("#newBtn").onclick=()=>{const v=curView();openModal(v==="dash"?"account":v);};
+$("#mSave").onclick=()=>{
+  const t=editType;
+  if(t==="memo")state.memos.push({id:uid(),accountId:$("#f_acct").value,content:$("#f_content").value,tags:($("#f_tags").value||"").split(",").map(s=>s.trim()).filter(Boolean),pinned:$("#f_pin").checked,createdAt:Date.now()});
+  else if(t==="todo")state.todos.push({id:uid(),accountId:$("#f_acct").value,title:$("#f_title").value,detail:$("#f_detail").value,priority:$("#f_pri").value,status:"todo",due:dt($("#f_due").value)});
+  else if(t==="reminder")state.reminders.push({id:uid(),accountId:$("#f_acct").value,type:$("#f_type").value,title:$("#f_title").value,trigger:dt($("#f_trig").value),repeat:$("#f_rep").value,done:false});
+  else if(t==="account")state.accounts.push({id:uid(),platform:$("#f_plat").value,name:$("#f_name").value,emoji:$("#f_emoji").value||"📱",status:$("#f_st").value,goal:$("#f_goal").value});
+  save();closeModal();renderAcctPanel();renderScopeUI();renderDash();renderMemo();renderTodo();renderRem();
+};
+function dt(v){if(!v)return Date.now();const d=new Date(v);return isNaN(d)?Date.now():d.getTime();}
+function curView(){const v=[...document.querySelectorAll(".view")].find(x=>x.classList.contains("active"));return v?v.id.replace("view-",""):"dash";}
+
+/* ---------------- init ---------------- */
+renderAcctPanel();renderScopeUI();renderDash();renderMemo();renderTodo();renderRem();
+</script>
+</body>
+</html>
