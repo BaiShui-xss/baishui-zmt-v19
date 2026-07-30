@@ -1,6 +1,6 @@
 ---
 name: baishui-zmt-v19
-description: 从零复现「新媒体运营工作台」稳定版 v19 的已验证工程工作流。This skill should be used when the user wants to rebuild/reproduce the multi-account new-media operations PWA at its verified v19 state, follow the exact v1→v19 build sequence, understand module development order, or recall key technical decisions (neutral-dark visual spec, localStorage-first data layer, optional Node+SQLite sync, CloudStudio fixed HTTPS deploy, iOS date-input fix). 触发词示例：「复现运营台」「重建新媒体工作台」「按 v19 重做」「运营台工作流」「新媒体工作台怎么搭」。
+description: 从零复现「新媒体运营工作台」v19（多账号新媒体运营 PWA）的已验证工程工作流。当用户要重建/复现该工作台、按 v1→v19 顺序开发、或回顾关键技术决策（中性深灰视觉、localStorage 优先、可选 Node 同步、CloudStudio 固定公网部署、iOS 日期框修复）时使用。触发词：复现运营台 / 重建新媒体工作台 / 按 v19 重做。
 version: 1.0.0
 agent_created: true
 license: MIT
@@ -13,16 +13,16 @@ disable: false
 
 ## 0. 这是什么 / 何时用
 
-本 skill 把「新媒体运营工作台」从 **第一步原型** 到 **稳定版 v19** 的全部开发过程，提炼成一条**已验证、去踩坑**的最直接路径。后续只要照此顺序执行，即可从零复现 v19 的全部功能。
+要从零复现 v19，严格按本工作流的顺序执行。本工作流提炼自「新媒体运营工作台」从原型到 v19 的**已验证、去踩坑**路径。
 
-适用于以下场景：
+在以下场景使用本 skill：
 - 从空白目录重建整个工作台，要求结果等价于已交付的 v19。
 - 理解模块开发顺序、各版本里程碑的关键决策。
-- 在另一台机器 / 新会话里继续维护或扩展该工作台。
+- 在新机器 / 新会话里继续维护或扩展该工作台。
 
-> 完整可运行的字节级源码已归档在 `references/v19-source/`（与本项目 v19 完全一致）。最快的「从零复现」方式见第 11 节：直接复制该目录，再按本 skill 核对关键决策即可，无需重新手写代码。
+> 复现时直接复制 `references/v19-source/` 的字节级源码归档（与 v19 完全一致），再按本工作流核对关键决策，无需重写代码。最快路径见第 11 节。
 
-**核心约束（贯穿全程，不可偏离）**
+**全程遵守以下核心约束**：
 1. **视觉规范：中性深灰、不要蓝调**。背景纯黑 `#000`，面板层级 `#0c0c0c / #141414 / #1d1d1d`；品牌强调色仅作功能性高亮（激活态 / 进度条 / 状态点），不用于面板底色。
 2. **数据 localStorage 优先**：所有数据默认存浏览器 localStorage，可选接 Node+SQLite 后端做多设备同步；跨设备默认用手动「导出/导入 JSON」。
 3. **纯前端单页、零构建**：原生 HTML/CSS/JS，无打包器、无框架。
@@ -82,10 +82,10 @@ disable: false
 
 ## 3. 已验证开发工作流（按真实跑通顺序，已剔除踩坑）
 
-> 以下步骤即「最快且正确」的路径。每一步都给出目标、产出、关键技术决策、验收标准。调试/返工/被废弃的方案不在此列。
+> 按以下步骤（最快且正确的路径）顺序执行。每步给出目标、产出、关键决策与验收标准；调试/返工/被废弃的方案已剔除。
 
 ### 步骤 1 · 原型与视觉定调
-- **目标**：先定视觉与模块划分，避免后期返工。
+- 先定视觉与模块划分，避免后期返工。
 - **产出**：`prototype.html`（用中性深灰验证布局）。
 - **关键决策**：
   - 面板配色以 `#808080` 灰为基准的深灰层级（背景纯黑，面板 `#0c0c0c/#141414/#1d1d1d`），去除蓝调。
@@ -93,7 +93,7 @@ disable: false
 - **验收**：原型视觉被确认「中性深灰、有高级感、无蓝调」。
 
 ### 步骤 2 · Phase 1 MVP（核心 4 模块）
-- **目标**：落地可运行单页应用骨架 + 核心 4 模块。
+- 落地可运行单页应用骨架 + 核心 4 模块。
 - **产出**：`index.html` + `assets/css/style.css` + `assets/js/store.js` + `assets/js/app.js` + `manifest.webmanifest` + `sw.js` + `gen_icons.py`。
 - **关键决策**：
   - `store.js`：`state` 初始含 `accounts/memos/todos/reminders` + `reminderTypes/profile/settings`；`migrate()` 对缺失集合补默认（防渲染崩溃）；`KEY="ops-workbench-v2"`。
@@ -104,7 +104,7 @@ disable: false
 - **验收**：核心 4 模块可增删改、数据刷新后仍在；JSON 备份/导入可用；桌面+手机基本可用；可装 PWA。
 
 ### 步骤 3 · Phase 2 同步后端（可选，默认关）
-- **目标**：提供多设备同步能力，但**默认关闭**，用户手动开启。
+- 提供多设备同步能力，但**默认关闭**，由用户手动开启。
 - **产出**：`server.js`（替代/补充 `serve.js`）。
 - **关键决策**：
   - 用 `node:sqlite` 零依赖实现；数据存 `data/ops.db`（`kv` 表，键 `state` + `updatedAt`）。
@@ -114,7 +114,7 @@ disable: false
 - **验收**：开启同步并填后端地址后，多端数据实时一致；关闭时纯本地正常运行。
 
 ### 步骤 4 · Phase 3 扩展 4 模块
-- **目标**：补齐 4 个分析/内容模块，复用既有数据与渲染模式。
+- 补齐 4 个分析/内容模块，复用既有数据与渲染模式。
 - **产出**：`app.js` 新增 `renderCalendar/renderTopics/renderAnalytics/renderReport` 等；`store.js` 新增 `state.topics` / `state.metrics` 与 `load()` 迁移。
 - **关键决策（数据模型）**：
   - **选题素材库** `state.topics`：`{id, accountId, title, body, tags:[], status, pinned, createdAt}`；`status ∈ idea(灵感,灰)/draft(草稿,蓝)/ready(待发,琥珀)/published(已发,绿)`；支持搜索、状态过滤 chips、点击编辑/删除；`load()` 加迁移补空数组防崩溃。
@@ -124,7 +124,7 @@ disable: false
 - **验收**：4 模块均渲染正常；多账号面板 mini 区显示各账号选题数；看板 SVG 在窄屏可读。
 
 ### 步骤 5 · PWA 缓存机制 + 部署收敛
-- **目标**：让前端更新可靠到达手机，并锁定统一访问地址。
+- 让前端更新可靠到达手机，并锁定统一访问地址。
 - **关键决策**：
   - `sw.js` 确立 cache-first + `CACHE="ops-vNN"` 常量 + 资源 `?v=N` 版本化；**任何前端改动须同步 bump `CACHE` 与 `?v=N` 与 `app.js` 的 `APP_VERSION`**。
   - 部署定案为 **CloudStudio 固定公网 HTTPS**（纯静态托管，脱离 Node 后端也能完整运行）；废弃「局域网 IP+自签证书」「Pinggy 动态隧道（60 分钟变地址）」等易变方案。
@@ -132,7 +132,7 @@ disable: false
 - **验收**：部署后全资源 200；手机「添加到主屏幕」后离线可加载；地址长期不变。
 
 ### 步骤 6 · 验收与移动端打磨（v15 → v19）
-- **目标**：用真机视口自动化验收，修复移动端体验，最终在真实 iOS Safari 验证通过。
+- 用真机视口自动化验收，修复移动端体验，最终在真实 iOS Safari 验证通过。
 - **关键决策**：
   - 建立《验收交接清单》（桌面 + 手机各走一遍，含移动端专项），用 Playwright（iPhone 13 视口 390×844）跑 **86 项断言** 作为回归基线。
   - v16：修编辑弹窗空值崩溃（`setV/setCk` 空值保护）、待办勾选状态（`done↔todo`）、弹窗超高关闭按钮挤出视口（`.modal` 加 `max-height:calc(100dvh-40px)` + flex 纵向 + body 滚动）、看板轴标签字号、启动 404、favicon；新增移动端「👤 个人资料」入口（侧栏 ≤860px 隐藏后替代）。
