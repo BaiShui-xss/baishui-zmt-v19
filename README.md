@@ -14,6 +14,34 @@
 - 按 v1→v24 顺序开发 / 二次开发
 - 回顾关键决策：中性深灰视觉规范、iOS Safari 日期框 `-webkit-appearance:none` 修复、CloudStudio 部署定案、设置页清空数据、账号编辑删除+密码备注+级联删除、选题素材库归入「模块」、模块内卡片批量删除、无浏览器自验证 workflow 等
 
+## 功能截图
+
+下面是 v24 工作台核心模块的界面实拍（所有图片均来自 `references/v24-source/docs/screenshots/`）：
+
+**多账号面板** —— 集中管理小红书 / 公众号 / 抖音等平台账号，卡片右上角常驻编辑 ✎ 与删除 🗑，删除时级联清理关联数据。
+
+![多账号面板](references/v24-source/docs/screenshots/01-dash.png)
+
+**备忘录** —— 随手记录灵感与临时信息，支持批量多选后一键删除。
+
+![备忘录](references/v24-source/docs/screenshots/02-memo.png)
+
+**待办清单** —— 运营待办 + 截止日期，完成后自动计入周月报统计。
+
+![待办清单](references/v24-source/docs/screenshots/03-todo.png)
+
+**提醒** —— 为内容设置发布提醒，本地定时触发，支持新建 / 编辑 / 删除。
+
+![提醒](references/v24-source/docs/screenshots/04-reminder.png)
+
+**发布日历** —— 按月查看计划发布与历史发布，快速定位选题排期。
+
+![发布日历](references/v24-source/docs/screenshots/05-calendar.png)
+
+**数据看板** —— 多账号指标趋势图与账号对比卡，纯 SVG 绘制、无第三方库依赖。
+
+![数据看板](references/v24-source/docs/screenshots/07-analytics.png)
+
 ## 包含什么
 
 - **`SKILL.md`**：已验证工程工作流（原型 → Phase1 MVP → Phase2 同步后端 → Phase3 扩展 4 模块 → PWA 缓存/部署收敛 → v15–v19 验收打磨 → v20–v24 功能迭代）、v1→v24 版本里程碑关键决策、核心数据模型、视觉规范、iOS 修复、自验证与部署流程、v24 完整功能清单、从零复现操作清单。
