@@ -17,6 +17,11 @@ function migrate(s){
   if(!Array.isArray(s.memos))     s.memos = [];
   if(!Array.isArray(s.todos))     s.todos = [];
   if(!Array.isArray(s.reminders)) s.reminders = [];
+  // 账号字段补全：密码 / 备注（旧数据或缺字段时回退空串，避免渲染出 undefined）
+  if(Array.isArray(s.accounts)) s.accounts.forEach(a=>{
+    if(a.password == null) a.password = "";
+    if(a.note == null) a.note = "";
+  });
   // 提醒自定义类型（名称 + 颜色），缺省回退到 3 个标准类型
   if(!Array.isArray(s.reminderTypes)) s.reminderTypes = [
     {id:"pub",name:"内容发布",color:"#38bdf8"},

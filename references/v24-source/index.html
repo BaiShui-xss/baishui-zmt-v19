@@ -9,7 +9,7 @@
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="icon" href="assets/icons/icon-192.png" />
 <link rel="apple-touch-icon" href="assets/icons/icon-512.png" />
-<link rel="stylesheet" href="assets/css/style.css?v=19" />
+<link rel="stylesheet" href="assets/css/style.css?v=24" />
 </head>
 <body>
 <div class="app">
@@ -43,6 +43,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
       <span class="lbl">提醒事项</span>
     </div>
+    <div class="nav-item" data-view="topics">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 5-9 5-9-5 9-5z"/><path d="M3 12l9 5 9-5M3 17l9 5 9-5"/></svg>
+      <span class="lbl">选题素材库</span>
+    </div>
     <div class="nav-label">数据分析</div>
     <div class="nav-item" data-view="calendar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
@@ -51,10 +55,6 @@
     <div class="nav-item" data-view="analytics">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>
       <span class="lbl">数据看板</span>
-    </div>
-    <div class="nav-item" data-view="topics">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 5-9 5-9-5 9-5z"/><path d="M3 12l9 5 9-5M3 17l9 5 9-5"/></svg>
-      <span class="lbl">选题素材库</span>
     </div>
     <div class="nav-item" data-view="report">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg>
@@ -89,12 +89,33 @@
 
       <section class="view active" id="view-dash">
         <div class="stat-row" id="statRow"></div>
+        <div class="toolbar">
+          <div class="spacer"></div>
+          <button class="btn btn-ghost card-batch-toggle" data-view="dash">批量</button>
+        </div>
+        <div class="card-batch-actions" data-view="dash" style="display:none;">
+          <span class="batch-hint">已选 <b class="card-batch-count">0</b> 项</span>
+          <div class="batch-btns">
+            <button class="btn-ghost small card-batch-cancel">取消</button>
+            <button class="btn-danger small card-batch-delete" disabled>删除</button>
+          </div>
+        </div>
         <div class="section-head"><h2>账号矩阵</h2><span class="count" id="dashCount"></span></div>
         <div class="grid-cards" id="acctGrid"></div>
       </section>
 
       <section class="view" id="view-memo">
-        <div class="toolbar"><div class="spacer"></div></div>
+        <div class="toolbar">
+          <div class="spacer"></div>
+          <button class="btn btn-ghost card-batch-toggle" data-view="memo">批量</button>
+        </div>
+        <div class="card-batch-actions" data-view="memo" style="display:none;">
+          <span class="batch-hint">已选 <b class="card-batch-count">0</b> 项</span>
+          <div class="batch-btns">
+            <button class="btn-ghost small card-batch-cancel">取消</button>
+            <button class="btn-danger small card-batch-delete" disabled>删除</button>
+          </div>
+        </div>
         <div class="list" id="memoList"></div>
       </section>
 
@@ -107,6 +128,14 @@
             <span class="chip" data-pri="todo">未完成</span>
             <span class="chip" data-pri="done">已完成</span>
           </div>
+          <button class="btn btn-ghost card-batch-toggle" data-view="todo">批量</button>
+        </div>
+        <div class="card-batch-actions" data-view="todo" style="display:none;">
+          <span class="batch-hint">已选 <b class="card-batch-count">0</b> 项</span>
+          <div class="batch-btns">
+            <button class="btn-ghost small card-batch-cancel">取消</button>
+            <button class="btn-danger small card-batch-delete" disabled>删除</button>
+          </div>
         </div>
         <div class="list" id="todoList"></div>
       </section>
@@ -115,6 +144,14 @@
         <div class="toolbar">
           <div class="spacer"></div>
           <div class="chips" id="remType"></div>
+          <button class="btn btn-ghost card-batch-toggle" data-view="reminder">批量</button>
+        </div>
+        <div class="card-batch-actions" data-view="reminder" style="display:none;">
+          <span class="batch-hint">已选 <b class="card-batch-count">0</b> 项</span>
+          <div class="batch-btns">
+            <button class="btn-ghost small card-batch-cancel">取消</button>
+            <button class="btn-danger small card-batch-delete" disabled>删除</button>
+          </div>
         </div>
         <div class="list" id="remList"></div>
       </section>
@@ -143,6 +180,14 @@
             <span class="chip" data-ts="draft">草稿</span>
             <span class="chip" data-ts="ready">待发</span>
             <span class="chip" data-ts="published">已发</span>
+          </div>
+          <button class="btn btn-ghost card-batch-toggle" data-view="topics">批量</button>
+        </div>
+        <div class="card-batch-actions" data-view="topics" style="display:none;">
+          <span class="batch-hint">已选 <b class="card-batch-count">0</b> 项</span>
+          <div class="batch-btns">
+            <button class="btn-ghost small card-batch-cancel">取消</button>
+            <button class="btn-danger small card-batch-delete" disabled>删除</button>
           </div>
         </div>
         <div class="list" id="topicList"></div>
@@ -260,7 +305,7 @@
   </div>
 </div>
 
-<script src="assets/js/store.js?v=19"></script>
-<script src="assets/js/app.js?v=19"></script>
+<script src="assets/js/store.js?v=24"></script>
+<script src="assets/js/app.js?v=24"></script>
 </body>
 </html>

@@ -6,7 +6,7 @@
 
 /* 当前版本号：每次改前端并重部署时，务必与 sw.js 的 CACHE（ops-vNN）同步 bump。
    用于「设置 → 关于」展示，方便确认手机端是否拉到最新版（冷启动后核对）。 */
-const APP_VERSION = "ops-v19";
+const APP_VERSION = "ops-v24";
 
 /* ---------------- 左上角个人资料（昵称 / 头像） ---------------- */
 function renderBrand(){
@@ -73,6 +73,11 @@ function renderDash(){
     {k:"今日待发布",v:todayPub,cls:todayPub?"warn":"ok"},
   ].map(s=>`<div class="stat ${s.cls}"><div class="k">${s.k}</div><div class="v">${s.v}</div></div>`).join("");
   $("#dashCount").textContent = `共 ${ac.length} 个账号`;
+  const batchDash = isCardBatchMode("dash");
+  if(!ac.length){
+    $("#acctGrid").innerHTML = `<div class="empty">还没有账号，点右上角「＋ 新建」添加第一个账号</div>`;
+    return;
+  }
   $("#acctGrid").innerHTML = ac.map(a=>{
     const at = state.todos.filter(t=>t.accountId===a.id);
     const dn = at.filter(t=>t.status==="done").length;
@@ -84,9 +89,12 @@ function renderDash(){
     const health = computeHealth(a, at);
     const hc = health>=80?"up":health>=60?"":"down";
     const [sc,sn] = STATUSMAP[a.status];
-    return `<div class="acard">
-      <div class="head"><div class="ava">${a.emoji}</div>
-        <div class="meta" style="flex:1"><div class="nm">${esc(a.name)}</div><div class="pf">${a.platform} · ${esc(a.goal||"")}</div></div>
+    const cb = batchDash ? `<input type="checkbox" class="card-cb" data-id="${a.id}" ${cardBatchState.selected.has(a.id)?"checked":""}>` : "";
+    return `<div class="acard" data-act="edit-account" data-id="${a.id}" title="点击编辑账号">
+      ${cb}<div class="head"><div class="ava">${a.emoji}</div>
+        <div class="meta" style="flex:1"><div class="nm">${esc(a.name)}${a.password?' <span class="lock">🔒</span>':''}</div><div class="pf">${a.platform} · ${esc(a.goal||"")}</div></div>
+        <span class="edit-badge" title="编辑">✎</span>
+        <span class="del-badge" data-act="del-account" data-id="${a.id}" title="删除账号">🗑</span>
         <span class="pill ${sc}">${sn}</span></div>
       <div class="barrow"><span>待办完成度</span><span>${dn}/${at.length}</span></div>
       <div class="bar"><i style="width:${p}%"></i></div>
@@ -102,11 +110,13 @@ function renderDash(){
 /* ---------------- 备忘录 ---------------- */
 function renderMemo(){
   const list = scopeFilter(state.memos).sort((a,b)=>(b.pinned-a.pinned)||(b.createdAt-a.createdAt));
+  const batchMemo = isCardBatchMode("memo");
   if(!list.length){ renderMemoHead(); $("#memoList").innerHTML = `<div class="empty">该范围下还没有备忘录，点右上角「新建」记录灵感吧</div>`; return; }
   renderMemoHead();
   $("#memoList").innerHTML = list.map(m=>{
     const a = m.accountId ? acct(m.accountId) : null;
-    return `<div class="card memo" data-act="edit-memo" data-id="${m.id}"><div class="top">${m.pinned?'<span class="pin">📌</span>':''}<div class="body">${esc(m.content)}</div></div>
+    const cb = batchMemo ? `<input type="checkbox" class="card-cb" data-id="${m.id}" ${cardBatchState.selected.has(m.id)?"checked":""}>` : "";
+    return `<div class="card memo" data-act="edit-memo" data-id="${m.id}">${cb}<div class="top">${m.pinned?'<span class="pin">📌</span>':''}<div class="body">${esc(m.content)}</div></div>
       <div class="foot">${m.tags.map(t=>`<span class="tag">#${esc(t)}</span>`).join("")}
         ${a?`<span class="acctag">${a.emoji} ${esc(a.name)}</span>`:'<span class="acctag">通用</span>'}
         <span class="at">${fmtDate(m.createdAt)}</span></div>
@@ -121,12 +131,14 @@ function renderTodo(){
   if(window._f.pri==="todo") list = list.filter(t=>t.status!=="done");
   if(window._f.pri==="done") list = list.filter(t=>t.status==="done");
   list.sort((a,b)=>(a.status==="done")-(b.status==="done")||(a.due-b.due));
+  const batchTodo = isCardBatchMode("todo");
   if(!list.length){ renderTodoHead(); $("#todoList").innerHTML = `<div class="empty">该筛选下暂无待办</div>`; return; }
   renderTodoHead();
   $("#todoList").innerHTML = list.map(t=>{
     const a = acct(t.accountId), dc = dueClass(t.due);
     const pn = {high:"高",mid:"中",low:"低"}[t.priority];
-    return `<div class="card todo ${t.status==="done"?"done":""}" data-act="edit-todo" data-id="${t.id}">
+    const cb = batchTodo ? `<input type="checkbox" class="card-cb" data-id="${t.id}" ${cardBatchState.selected.has(t.id)?"checked":""}>` : "";
+    return `<div class="card todo ${t.status==="done"?"done":""}" data-act="edit-todo" data-id="${t.id}">${cb}
       <div class="check" data-act="toggle" data-id="${t.id}">✓</div>
       <div style="flex:1"><div class="tt">${esc(t.title)}</div>
         ${t.detail?`<div class="det">${esc(t.detail)}</div>`:""}
@@ -164,10 +176,12 @@ function renderRem(){
   $("#remType").innerHTML = `<span class="chip ${!window._f.type||window._f.type==="all"?"active":""}" data-rtype="all">全部</span>`
     + types.map(t=>`<span class="chip ${window._f.type===t.id?"active":""}" data-rtype="${t.id}"><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${t.color};margin-right:6px"></i>${esc(t.name)}</span>`).join("");
   renderRemLegend();
+  const batchRem = isCardBatchMode("reminder");
   if(!list.length){ $("#remList").innerHTML = `<div class="empty">该范围 / 类型下暂无提醒</div>`; return; }
   $("#remList").innerHTML = list.map(r=>{
     const a = acct(r.accountId); const t = remTypeOf(r);
-    return `<div class="card reminder" data-act="edit-reminder" data-id="${r.id}"><div class="rtime">${fmtFull(r.trigger).slice(5,16)}</div>
+    const cb = batchRem ? `<input type="checkbox" class="card-cb" data-id="${r.id}" ${cardBatchState.selected.has(r.id)?"checked":""}>` : "";
+    return `<div class="card reminder" data-act="edit-reminder" data-id="${r.id}">${cb}<div class="rtime">${fmtFull(r.trigger).slice(5,16)}</div>
       <div style="flex:1"><span class="rtype" style="background:${t.color}22;color:${t.color};border:1px solid ${t.color}55">${esc(t.name)}</span>
         ${r.repeat && r.repeat!=="无"?`<span class="rep">↻ ${r.repeat}</span>`:""}
         <div style="font-weight:600;margin-top:6px">${esc(r.title)}</div>
@@ -256,13 +270,15 @@ function renderTopics(){
   const q = (window._tq||"").toLowerCase();
   if(q) list = list.filter(x => (x.title||"").toLowerCase().includes(q) || (x.body||"").toLowerCase().includes(q) || (x.tags||[]).some(t=>t.toLowerCase().includes(q)));
   list.sort((a,b)=>(b.pinned-a.pinned)||(b.createdAt-a.createdAt));
+  const batchTopic = isCardBatchMode("topics");
   if(!list.length){ renderTopicsHead(); $("#topicList").innerHTML = `<div class="empty">该范围下还没有选题，点右上角「新建」沉淀灵感吧</div>`; return; }
   renderTopicsHead();
   const smap = {idea:["idea","灵感"],draft:["draft","草稿"],ready:["ready","待发"],published:["published","已发"]};
   $("#topicList").innerHTML = list.map(tp=>{
     const a = tp.accountId ? acct(tp.accountId) : null;
     const [c,n] = smap[tp.status] || smap.idea;
-    return `<div class="card topic" data-act="edit-topic" data-id="${tp.id}">
+    const cb = batchTopic ? `<input type="checkbox" class="card-cb" data-id="${tp.id}" ${cardBatchState.selected.has(tp.id)?"checked":""}>` : "";
+    return `<div class="card topic" data-act="edit-topic" data-id="${tp.id}">${cb}
       <div class="top">${tp.pinned?'<span class="pin">📌</span>':''}<div class="tt">${esc(tp.title||"未命名选题")}</div>
         <span class="del-x" data-act="del-topic" data-id="${tp.id}" title="删除">×</span></div>
       ${tp.body?`<div class="body">${esc(tp.body)}</div>`:""}
@@ -421,6 +437,7 @@ const TITLES = {
   report:["周/月报","基于现有数据自动汇总运营周报 / 月报"],
 };
 function go(view){
+  exitCardBatchMode();
   $$(".nav-item[data-view]").forEach(n=>n.classList.toggle("active",n.dataset.view===view));
   $$(".botnav .bi").forEach(n=>n.classList.toggle("active",n.dataset.view===view));
   $$(".view").forEach(v=>v.classList.remove("active"));
@@ -436,7 +453,81 @@ function go(view){
   if(view==="analytics") renderAnalytics();
   if(view==="report") renderReport();
 }
-$$(".nav-item[data-view], .botnav .bi").forEach(n=>n.addEventListener("click",()=>go(n.dataset.view)));
+/* ---------- 模块内卡片批量删除 ---------- */
+let cardBatchState = { view:null, selected:new Set() };
+
+function isCardBatchMode(view){ return cardBatchState.view === view; }
+
+function enterCardBatchMode(view){
+  cardBatchState.view = view;
+  cardBatchState.selected.clear();
+  const viewEl = $(`#view-${view}`);
+  if(viewEl) viewEl.classList.add("card-batch-mode");
+  const bar = $(`.card-batch-actions[data-view="${view}"]`);
+  if(bar) bar.style.display = "flex";
+  const btn = $(`.card-batch-toggle[data-view="${view}"]`);
+  if(btn){ btn.textContent = "完成"; btn.classList.add("active"); }
+  updateCardBatchCount();
+  if(view==="dash") renderDash();
+  else if(view==="memo") renderMemo();
+  else if(view==="todo") renderTodo();
+  else if(view==="reminder") renderRem();
+  else if(view==="topics") renderTopics();
+}
+function exitCardBatchMode(){
+  const view = cardBatchState.view;
+  if(!view) return;
+  const viewEl = $(`#view-${view}`);
+  if(viewEl) viewEl.classList.remove("card-batch-mode");
+  const bar = $(`.card-batch-actions[data-view="${view}"]`);
+  if(bar) bar.style.display = "none";
+  const btn = $(`.card-batch-toggle[data-view="${view}"]`);
+  if(btn){ btn.textContent = "批量"; btn.classList.remove("active"); }
+  cardBatchState.view = null;
+  cardBatchState.selected.clear();
+  if(view==="dash") renderDash();
+  else if(view==="memo") renderMemo();
+  else if(view==="todo") renderTodo();
+  else if(view==="reminder") renderRem();
+  else if(view==="topics") renderTopics();
+}
+function updateCardBatchCount(){
+  const view = cardBatchState.view;
+  if(!view) return;
+  $$(`#view-${view} .card-cb`).forEach(cb=>{
+    cardBatchState.selected[cb.checked ? "add" : "delete"](cb.dataset.id);
+  });
+  const count = cardBatchState.selected.size;
+  $$(`.card-batch-actions[data-view="${view}"] .card-batch-count`).forEach(el=>el.textContent = count);
+  const delBtn = $(`.card-batch-actions[data-view="${view}"] .card-batch-delete`);
+  if(delBtn) delBtn.disabled = count === 0;
+}
+function deleteSelectedCards(){
+  const view = cardBatchState.view;
+  if(!view || cardBatchState.selected.size === 0) return;
+  const ids = [...cardBatchState.selected];
+  const names = {dash:"账号", memo:"备忘录", todo:"待办", reminder:"提醒", topics:"选题"};
+  if(!confirm(`确定删除选中的 ${ids.length} 个${names[view]||"项目"}？\n\n此操作不可恢复。`)) return;
+  if(view==="dash"){
+    ids.forEach(id=> removeAccountCascade(id));
+  } else if(view==="memo"){
+    state.memos = state.memos.filter(m=>!ids.includes(m.id));
+  } else if(view==="todo"){
+    state.todos = state.todos.filter(t=>!ids.includes(t.id));
+  } else if(view==="reminder"){
+    state.reminders = state.reminders.filter(r=>!ids.includes(r.id));
+  } else if(view==="topics"){
+    state.topics = state.topics.filter(t=>!ids.includes(t.id));
+  }
+  save();
+  cardBatchState.selected.clear();
+  updateCardBatchCount();
+  renderDash(); renderMemo(); renderTodo(); renderRem(); renderTopics(); renderAnalytics(); renderCalendar(); renderReport();
+  if(calSel) renderDayDetail(calSel.y, calSel.m, calSel.d);
+  toast(`已删除 ${ids.length} 个${names[view]||"项目"}`);
+}
+
+$$(".nav-item[data-view], .botnav .bi").forEach(n=>n.addEventListener("click", ()=>go(n.dataset.view)));
 $$(".nav-item[data-soon]").forEach(n=>n.addEventListener("click",()=>toast("该模块在 Phase 3 规划中")));
 function toast(msg){
   const t = document.createElement("div");
@@ -471,6 +562,18 @@ window.updateSyncPill = function(status){
 
 /* ---------------- 点击委托：范围 / 过滤 / 勾选 ---------------- */
 document.addEventListener("click", e=>{
+  // 模块内卡片批量模式：点卡片本身切换复选框；点复选框本身交给 change 事件
+  if(e.target.closest(".card-cb")) return;
+  const batchView = cardBatchState.view;
+  if(batchView){
+    const viewEl = $("#view-"+batchView);
+    const card = e.target.closest(".acard, .card");
+    if(viewEl && card && viewEl.contains(card)){
+      const cb = card.querySelector(".card-cb");
+      if(cb){ cb.checked = !cb.checked; cb.dispatchEvent(new Event("change",{bubbles:true})); }
+      return;
+    }
+  }
   const sc = e.target.closest("[data-scope]");
   if(sc){ setScope(sc.dataset.scope); return; }
   const p = e.target.closest("[data-pri]");
@@ -505,6 +608,17 @@ document.addEventListener("click", e=>{
   if(drem){ if(confirm("确定删除该提醒？")){ state.reminders = state.reminders.filter(x=>x.id!==drem.dataset.id); save(); renderRem(); renderDash(); if(calSel) renderDayDetail(calSel.y, calSel.m, calSel.d); } return; }
   const erem = e.target.closest("[data-act='edit-reminder']");
   if(erem){ openModal("reminder", erem.dataset.id); return; }
+  const dacc = e.target.closest("[data-act='del-account']");
+  if(dacc){
+    if(confirm("确定删除该账号？其下的备忘录 / 待办 / 提醒 / 选题 / 数据记录将一并清除，且不可恢复。")){
+      removeAccountCascade(dacc.dataset.id); save();
+      renderMemo(); renderTodo(); renderRem(); renderTopics(); renderAnalytics(); renderDash();
+      if(calSel) renderDayDetail(calSel.y, calSel.m, calSel.d);
+    }
+    return;
+  }
+  const eacc = e.target.closest("[data-act='edit-account']");
+  if(eacc){ openModal("account", eacc.dataset.id); return; }
   const ts = e.target.closest("[data-ts]");
   if(ts){ window._f.tstatus = ts.dataset.ts==="all" ? undefined : ts.dataset.ts; syncChips("#topicStatus","ts",ts.dataset.ts); renderTopics(); return; }
   const mc = e.target.closest("[data-m]");
@@ -523,12 +637,16 @@ document.addEventListener("click", e=>{
       else if(editType==="reminder") state.reminders = state.reminders.filter(x=>x.id!==editing.id);
       else if(editType==="memo") state.memos = state.memos.filter(x=>x.id!==editing.id);
       else if(editType==="todo") state.todos = state.todos.filter(x=>x.id!==editing.id);
+      else if(editType==="account") removeAccountCascade(editing.id);
       save(); closeModal();
       renderMemo(); renderTodo(); renderRem(); renderTopics(); renderAnalytics(); renderDash();
       if(calSel) renderDayDetail(calSel.y, calSel.m, calSel.d);
     }
     return;
   }
+});
+document.addEventListener("change", e=>{
+  if(e.target.classList.contains("card-cb")) updateCardBatchCount();
 });
 $("#topicSearch").addEventListener("input", e=>{ window._tq = e.target.value.trim().toLowerCase(); renderTopics(); });
 function syncChips(sel, attr, val){
@@ -573,6 +691,7 @@ function openModal(type, id){
     else if(type==="todo")    pre = state.todos.find(x=>x.id===id) || null;
     else if(type==="reminder")pre = state.reminders.find(x=>x.id===id) || null;
     else if(type==="metric")  pre = state.metrics.find(x=>x.id===id) || null;
+    else if(type==="account") pre = state.accounts.find(x=>x.id===id) || null;
     editing = pre || null;
   }
   $("#mTitle").textContent = (pre?"编辑":"新建") + (type==="memo"?"备忘录":type==="todo"?"待办":type==="reminder"?"提醒":type==="topic"?"选题":type==="metric"?"指标记录":type==="account"?"账号":"");
@@ -637,15 +756,21 @@ function openModal(type, id){
       </div>
       ${pre?'<div class="field" style="margin-top:2px"><button class="btn btn-ghost" id="f_del" style="color:var(--danger);width:100%">🗑 删除此记录</button></div>':''}`;
   } else if(type==="account"){
+    const platOpts = (pre && pre.platform && !PLAT.includes(pre.platform))
+      ? `<option value="${esc(pre.platform)}">${esc(pre.platform)}</option>` + PLAT.map(p=>`<option>${p}</option>`).join("")
+      : PLAT.map(p=>`<option>${p}</option>`).join("");
     html = `<div class="field"><label>账号名称</label><input id="f_name" placeholder="如：生活研究所"></div>
       <div class="row2">
-        <div class="field"><label>平台</label><select id="f_plat">${PLAT.map(p=>`<option>${p}</option>`).join("")}</select></div>
+        <div class="field"><label>平台</label><select id="f_plat">${platOpts}</select></div>
         <div class="field"><label>图标 Emoji</label><input id="f_emoji" placeholder="📕" value="📱"></div>
       </div>
       <div class="row2">
         <div class="field"><label>状态</label><select id="f_st"><option value="active">活跃</option><option value="incub">孵化中</option><option value="sleep">休眠</option></select></div>
         <div class="field"><label>目标</label><input id="f_goal" placeholder="如：粉丝破 5w"></div>
-      </div>`;
+      </div>
+      <div class="field"><label>密码</label><input type="password" id="f_pwd" placeholder="选填，记录该账号密码" autocomplete="off"></div>
+      <div class="field"><label>备注</label><textarea id="f_note" placeholder="账号相关的补充信息（选填）"></textarea></div>
+      ${pre?'<div class="field" style="margin-top:2px"><button class="btn btn-ghost" id="f_del" style="color:var(--danger);width:100%">🗑 删除此账号</button></div>':''}`;
   }
   $("#mBody").innerHTML = html;
   /* 安全回填：各表单字段并不相同（如备忘录没有 #f_title、待办没有 #f_body），
@@ -659,6 +784,7 @@ function openModal(type, id){
     if(type==="reminder"){ setV("#f_title", pre.title||""); setV("#f_trig", pre.trigger ? toLocalInput(new Date(pre.trigger)) : ""); setV("#f_rep", pre.repeat||"无"); }
     if(type==="topic"){ setV("#f_title", pre.title||""); setV("#f_body", pre.body||""); setV("#f_status", pre.status||"idea"); setV("#f_tags", (pre.tags||[]).join(", ")); setCk("#f_pin", pre.pinned); }
     if(type==="metric"){ setV("#f_date", pre.date||""); setV("#f_followers", pre.followers||0); setV("#f_views", pre.views||0); setV("#f_likes", pre.likes||0); setV("#f_comments", pre.comments||0); }
+    if(type==="account"){ setV("#f_name", pre.name||""); setV("#f_plat", pre.platform||"其他"); setV("#f_emoji", pre.emoji||"📱"); setV("#f_st", pre.status||"active"); setV("#f_goal", pre.goal||""); setV("#f_pwd", pre.password||""); setV("#f_note", pre.note||""); }
   } else if(window._scope!=="all" && (type==="memo"||type==="todo"||type==="reminder"||type==="topic"||type==="metric")){
     const sel = $("#f_acct"); if(sel) sel.value = window._scope;
   }
@@ -672,6 +798,17 @@ function acctOpts(allowGeneral){
   return o + state.accounts.map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join("");
 }
 function closeModal(){ $("#mask").classList.remove("show"); calComposeDate = null; }
+/* 删除账号并级联清除其全部关联数据（备忘录 / 待办 / 提醒 / 选题 / 指标），同时刷新账号面板与范围选择 */
+function removeAccountCascade(id){
+  state.accounts = state.accounts.filter(a=>a.id!==id);
+  state.memos = state.memos.filter(m=>m.accountId!==id);
+  state.todos = state.todos.filter(t=>t.accountId!==id);
+  state.reminders = state.reminders.filter(r=>r.accountId!==id);
+  state.topics = state.topics.filter(x=>x.accountId!==id);
+  state.metrics = state.metrics.filter(x=>x.accountId!==id);
+  if(window._scope===id) window._scope = "all";
+  renderAcctPanel(); renderScopeUI();
+}
 
 /* 提醒类型选择器：芯片选择已有类型，或新建自定义类型（名称 + 颜色） */
 function initReminderTypeUI(selId){
@@ -819,7 +956,11 @@ $("#mSave").onclick = () => {
     if(editing){ const tg = state.reminders.find(x=>x.id===editing.id); if(tg){ data.done = tg.done; Object.assign(tg, data); } else state.reminders.push(Object.assign({id:uid(), done:false}, data)); }
     else state.reminders.push(Object.assign({id:uid(), done:false}, data));
   }
-  else if(t==="account") state.accounts.push({id:uid(),platform:$("#f_plat").value,name:$("#f_name").value,emoji:$("#f_emoji").value||"📱",status:$("#f_st").value,goal:$("#f_goal").value});
+  else if(t==="account"){
+    const data = {platform:$("#f_plat").value, name:$("#f_name").value, emoji:$("#f_emoji").value||"📱", status:$("#f_st").value, goal:$("#f_goal").value, password:$("#f_pwd").value, note:$("#f_note").value};
+    if(editing){ const tg = state.accounts.find(x=>x.id===editing.id); if(tg) Object.assign(tg, data); else state.accounts.push(Object.assign({id:uid()}, data)); }
+    else state.accounts.push(Object.assign({id:uid()}, data));
+  }
   else if(t==="topic"){
     const wasPublished = editing && editing.status==="published";   // 转 published 之前是否已是已发
     const data = {accountId:$("#f_acct").value, title:$("#f_title").value, body:$("#f_body").value, tags:($("#f_tags").value||"").split(",").map(s=>s.trim()).filter(Boolean), status:$("#f_status").value, pinned:$("#f_pin").checked};
@@ -1042,7 +1183,16 @@ function openSettings(){
   $("#setImport").onclick = ()=> $("#importFile").click();
   $("#setClear").onclick = ()=>{
     if(confirm("确定清空全部数据？此操作不可撤销，建议先导出备份。")){
-      localStorage.removeItem(KEY); localStorage.removeItem(SYNC_CFG_KEY); location.reload();
+      // 彻底清空所有用户数据（账号 / 备忘录 / 待办 / 提醒 / 选题 / 指标），回到干净起点
+      state.accounts = []; state.memos = []; state.todos = [];
+      state.reminders = []; state.topics = []; state.metrics = [];
+      state.profile = {name:"运营工作台", avatar:""};
+      state.settings = {notify:false};
+      window._scope = "all"; window._f = {}; window._tq = ""; window._fm = "followers"; window._rr = "week";
+      save();                         // 本地持久化；若已开启云端同步，会同时清空后端数据
+      $("#settingsMask").classList.remove("show");
+      renderEverywhere(false);
+      toast("已清空全部数据");
     }
   };
 }
@@ -1172,6 +1322,13 @@ if("serviceWorker" in navigator && location.protocol.startsWith("http")){
     if(window.updateSyncPill) window.updateSyncPill("local");
   }
   renderAcctPanel(); renderScopeUI(); renderBrand(); renderDash(); renderMemo(); renderTodo(); renderRem(); renderTopics(); renderAnalytics(); renderReport();
+  $$(".card-batch-toggle").forEach(btn=>btn.onclick = ()=>{
+    const view = btn.dataset.view;
+    if(cardBatchState.view === view) exitCardBatchMode();
+    else enterCardBatchMode(view);
+  });
+  $$(".card-batch-cancel").forEach(btn=>btn.onclick = exitCardBatchMode);
+  $$(".card-batch-delete").forEach(btn=>btn.onclick = deleteSelectedCards);
   updateReminderBadge();
   maybeStartNotifier();
   setInterval(() => { if(SYNC.enabled) pullState(); }, 15000);
