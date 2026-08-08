@@ -1,5 +1,5 @@
 ---
-name: baishui-zmt-v19
+name: baishui-zmt-v24
 description: 从零复现「新媒体运营工作台」v24（多账号新媒体运营 PWA）的已验证工程工作流。当用户要重建/复现该工作台、按 v1→v24 顺序开发、或回顾关键技术决策（中性深灰视觉、localStorage 优先、可选 Node 同步、CloudStudio 固定公网部署、iOS 日期框修复、设置页清空数据、账号编辑删除+密码备注+级联删除、选题素材库归入模块、模块内批量删除）时使用。触发词：复现运营台 / 重建新媒体工作台 / 按 v24 重做。
 version: 2.0.0
 agent_created: true

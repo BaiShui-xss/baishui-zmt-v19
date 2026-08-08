@@ -26,14 +26,14 @@
 
 把技能放进 WorkBuddy 的**用户级技能目录** `~/.workbuddy/skills/` 即可，四种取法任选其一：
 
-- **方式 A（推荐，能跟着更新）**：`git clone https://github.com/BaiShui-xss/baishui-zmt-v19.git ~/.workbuddy/skills/baishui-zmt-v19`
-- **方式 B（离线 / 单文件）**：下载 `baishui-zmt-v19.zip`，解压到 `~/.workbuddy/skills/baishui-zmt-v19/`
-- **方式 C（直接拷）**：把整个 `baishui-zmt-v19` 文件夹丢进 `~/.workbuddy/skills/`
-- **方式 D（让 Agent 帮你装）**：直接把本仓库地址 `https://github.com/BaiShui-xss/baishui-zmt-v19` 复制到 WorkBuddy 聊天框，说「帮我把这个 skill 安装到用户级技能目录」，Agent 会自动把它 `git clone` 到 `~/.workbuddy/skills/baishui-zmt-v19` 并加载（需 Agent 有网络与 shell 权限，WorkBuddy 默认具备）。
+- **方式 A（推荐，能跟着更新）**：`git clone https://github.com/BaiShui-xss/baishui-zmt-v24.git ~/.workbuddy/skills/baishui-zmt-v24`
+- **方式 B（离线 / 单文件）**：下载 `baishui-zmt-v24.zip`，解压到 `~/.workbuddy/skills/baishui-zmt-v24/`
+- **方式 C（直接拷）**：把整个 `baishui-zmt-v24` 文件夹丢进 `~/.workbuddy/skills/`
+- **方式 D（让 Agent 帮你装）**：直接把本仓库地址 `https://github.com/BaiShui-xss/baishui-zmt-v24` 复制到 WorkBuddy 聊天框，说「帮我把这个 skill 安装到用户级技能目录」，Agent 会自动把它 `git clone` 到 `~/.workbuddy/skills/baishui-zmt-v24` 并加载（需 Agent 有网络与 shell 权限，WorkBuddy 默认具备）。
 
-> 注：GitHub 仓库名仍为 `baishui-zmt-v19`，但仓库内容已更新到 **v24**（含 v20–v24 源码与图文版使用说明）。若想改名，可在 GitHub 仓库 Settings 中 rename。
+> 注：GitHub 仓库名 `baishui-zmt-v24`，内容已更新到 **v24**（含 v20–v24 源码与图文版使用说明）。
 
-放好后**重启（或刷新）WorkBuddy**，新建对话说「按 baishui-zmt-v19 复现运营台」即可唤起。
+放好后**重启（或刷新）WorkBuddy**，新建对话说「按 baishui-zmt-v24 复现运营台」即可唤起。
 
 ## 验收说明
 
